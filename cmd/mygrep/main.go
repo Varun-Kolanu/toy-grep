@@ -57,6 +57,15 @@ func matchLine(line []byte, pattern string) (bool, error) {
 			toMatch.WriteString(string(c))
 		}
 	} else if pattern[0] == '[' && pattern[len(pattern)-1] == ']' {
+		if len(pattern) >= 3 && pattern[1] == '^' {
+			toCheck := pattern[2 : len(pattern)-1]
+			for _, c := range line {
+				if !strings.Contains(toCheck, string(c)) {
+					return true, nil
+				}
+			}
+			return false, nil
+		}
 		toMatch.WriteString(pattern[1 : len(pattern)-1])
 	} else {
 		toMatch.WriteString(pattern)
