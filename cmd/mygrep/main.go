@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 	"unicode/utf8"
 )
 
@@ -35,24 +36,34 @@ func main() {
 }
 
 func matchLine(line []byte, pattern string) (bool, error) {
-	if utf8.RuneCountInString(pattern) > 2 {
+	if utf8.RuneCountInString(pattern) == 0 {
 		return false, fmt.Errorf("unsupported pattern: %q", pattern)
 	}
 
 	var ok bool = false
+	var toMatch strings.Builder
 	if pattern == "\\d" {
-		ok = bytes.ContainsAny(line, "0123456789")
-	} else if pattern == "\\w" {
-		for _, c := range line {
-			if (c > '0' && c < '9') || (c > 'A' && c < 'Z') || (c > 'a' && c < 'z') || c == '_' {
-				fmt.Println(string(c))
-				ok = true
-				break
-			}
+		for c := '0'; c <= '9'; c++ {
+			toMatch.WriteString(string(c))
 		}
+	} else if pattern == "\\w" {
+		for c := '0'; c <= '9'; c++ {
+			toMatch.WriteString(string(c))
+		}
+		for c := 'a'; c <= 'z'; c++ {
+			toMatch.WriteString(string(c))
+		}
+		for c := 'A'; c <= 'Z'; c++ {
+			toMatch.WriteString(string(c))
+		}
+	} else if pattern[0] == '[' && pattern[len(pattern)-1] == ']' {
+		toMatch.WriteString(pattern[1 : len(pattern)-1])
 	} else {
-		ok = bytes.ContainsAny(line, pattern)
+		toMatch.WriteString(pattern)
 	}
+
+	matchString := toMatch.String()
+	ok = bytes.ContainsAny(line, matchString)
 
 	return ok, nil
 }
