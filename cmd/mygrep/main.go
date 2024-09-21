@@ -43,7 +43,7 @@ func matchLine(line []byte, pattern string) (bool, error) {
 			ok = true
 			break
 		}
-		if pattern[0] == '^' {
+		if pattern[0] == '^' || pattern[len(pattern)-1] == '$' {
 			break
 		}
 	}
@@ -82,8 +82,12 @@ func matchChar(line []byte, pattern string, ind int) bool {
 	}
 	char := line[ind]
 	patternIndex := 0
+	patternLen := len(pattern)
 	if pattern[0] == '^' {
 		patternIndex = 1
+	} else if pattern[patternLen-1] == '$' {
+		ind = len(line) - patternLen + 1
+		pattern = pattern[:patternLen-1]
 	} else if len(pattern) >= 2 && pattern[:2] == "\\d" {
 		if !matchDigit(char) {
 			return false
