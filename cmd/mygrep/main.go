@@ -43,6 +43,9 @@ func matchLine(line []byte, pattern string) (bool, error) {
 			ok = true
 			break
 		}
+		if pattern[0] == '^' {
+			break
+		}
 	}
 	return ok, nil
 }
@@ -79,16 +82,20 @@ func matchChar(line []byte, pattern string, ind int) bool {
 	}
 	char := line[ind]
 	patternIndex := 0
-	if len(pattern) >= 2 && pattern[:2] == "\\d" {
+	if pattern[0] == '^' {
+		patternIndex = 1
+	} else if len(pattern) >= 2 && pattern[:2] == "\\d" {
 		if !matchDigit(char) {
 			return false
 		}
 		patternIndex = 2
+		ind++
 	} else if len(pattern) >= 2 && pattern[:2] == "\\w" {
 		if !matchAlphaNumeric(char) {
 			return false
 		}
 		patternIndex = 2
+		ind++
 	} else if pattern[0] == '[' {
 		rightBracket := strings.Index(pattern, "]")
 		if rightBracket == -1 {
@@ -107,14 +114,16 @@ func matchChar(line []byte, pattern string, ind int) bool {
 			}
 		}
 		patternIndex = rightBracket + 1
+		ind++
 	} else {
 		if char != byte(pattern[0]) {
 			return false
 		}
 		patternIndex = 1
+		ind++
 	}
 	if patternIndex >= len(pattern) {
 		return true
 	}
-	return matchChar(line, pattern[patternIndex:], ind+1)
+	return matchChar(line, pattern[patternIndex:], ind)
 }
