@@ -76,8 +76,14 @@ func matchNegativeCharacterGroup(char byte, str string) bool {
 	return true
 }
 
+func matchEquals(char1 byte, char2 byte) bool {
+	return char1 == char2
+}
+
 func matchChar(line []byte, pattern string, ind int) bool {
-	if ind >= len(line) {
+	// fmt.Println(pattern, line[ind])
+	lineLength := len(line)
+	if ind >= lineLength {
 		return false
 	}
 	char := line[ind]
@@ -120,7 +126,22 @@ func matchChar(line []byte, pattern string, ind int) bool {
 		patternIndex = rightBracket + 1
 		ind++
 	} else {
-		if char != byte(pattern[0]) {
+		if patternLen >= 2 && pattern[1] == '+' {
+			for i := ind; i < lineLength; i++ {
+				if matchEquals(line[i], pattern[0]) {
+					if patternLen == 2 {
+						return true
+					}
+					if matchChar(line, pattern[2:], i+1) {
+						return true
+					}
+					return matchChar(line, pattern, i+1)
+				} else {
+					return false
+				}
+			}
+		}
+		if !matchEquals(char, pattern[0]) {
 			return false
 		}
 		patternIndex = 1
