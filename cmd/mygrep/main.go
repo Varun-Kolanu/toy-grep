@@ -101,7 +101,11 @@ func matchChar(line []byte, pattern string, ind int) bool {
 	}
 	char := line[ind]
 	patternIndex := 0
-	if pattern[0] == '^' {
+
+	if pattern[0] == '.' {
+		ind++
+		patternIndex++
+	} else if pattern[0] == '^' {
 		patternIndex = 1
 	} else if pattern[patternLen-1] == '$' {
 		ind = len(line) - patternLen + 1
