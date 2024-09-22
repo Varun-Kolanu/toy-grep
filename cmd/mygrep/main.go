@@ -80,9 +80,21 @@ func matchEquals(char1 byte, char2 byte) bool {
 	return char1 == char2
 }
 
+func getRightString(pattern string, index int) string {
+	if index >= len(pattern) {
+		return ""
+	} else {
+		return pattern[index:]
+	}
+}
+
 func matchChar(line []byte, pattern string, ind int) bool {
 	patternLen := len(pattern)
 	lineLength := len(line)
+
+	if patternLen == 0 {
+		return true
+	}
 
 	if patternLen >= 2 && pattern[1] == '?' {
 		if patternLen == 2 {
@@ -107,6 +119,20 @@ func matchChar(line []byte, pattern string, ind int) bool {
 		patternIndex++
 	} else if pattern[0] == '^' {
 		patternIndex = 1
+	} else if pattern[0] == '(' {
+		rightBracket := strings.Index(pattern, ")")
+		if rightBracket == -1 {
+			fmt.Fprintf(os.Stderr, "unsupported pattern\n")
+			os.Exit(2)
+		}
+		pats := pattern[1:rightBracket]
+		patterns := strings.Split(pats, "|")
+		for _, pat := range patterns {
+			if matchChar(line, pat+getRightString(pattern, rightBracket+1), ind) {
+				return true
+			}
+		}
+		return false
 	} else if pattern[patternLen-1] == '$' {
 		ind = len(line) - patternLen + 1
 		pattern = pattern[:patternLen-1]
@@ -162,8 +188,5 @@ func matchChar(line []byte, pattern string, ind int) bool {
 		patternIndex = 1
 		ind++
 	}
-	if patternIndex >= len(pattern) {
-		return true
-	}
-	return matchChar(line, pattern[patternIndex:], ind)
+	return matchChar(line, getRightString(pattern, patternIndex), ind)
 }
