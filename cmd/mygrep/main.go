@@ -81,14 +81,26 @@ func matchEquals(char1 byte, char2 byte) bool {
 }
 
 func matchChar(line []byte, pattern string, ind int) bool {
-	// fmt.Println(pattern, line[ind])
+	patternLen := len(pattern)
 	lineLength := len(line)
+
+	if patternLen >= 2 && pattern[1] == '?' {
+		if patternLen == 2 {
+			return true
+		}
+		notConsidering := matchChar(line, pattern[2:], ind)
+		considering := false
+		if pattern[0] == line[ind] {
+			considering = matchChar(line, pattern[2:], ind+1)
+		}
+		return notConsidering || considering
+	}
+
 	if ind >= lineLength {
 		return false
 	}
 	char := line[ind]
 	patternIndex := 0
-	patternLen := len(pattern)
 	if pattern[0] == '^' {
 		patternIndex = 1
 	} else if pattern[patternLen-1] == '$' {
@@ -125,22 +137,21 @@ func matchChar(line []byte, pattern string, ind int) bool {
 		}
 		patternIndex = rightBracket + 1
 		ind++
-	} else {
-		if patternLen >= 2 && pattern[1] == '+' {
-			for i := ind; i < lineLength; i++ {
-				if matchEquals(line[i], pattern[0]) {
-					if patternLen == 2 {
-						return true
-					}
-					if matchChar(line, pattern[2:], i+1) {
-						return true
-					}
-					return matchChar(line, pattern, i+1)
-				} else {
-					return false
+	} else if patternLen >= 2 && pattern[1] == '+' {
+		for i := ind; i < lineLength; i++ {
+			if matchEquals(line[i], pattern[0]) {
+				if patternLen == 2 {
+					return true
 				}
+				if matchChar(line, pattern[2:], i+1) {
+					return true
+				}
+				return matchChar(line, pattern, i+1)
+			} else {
+				return false
 			}
 		}
+	} else {
 		if !matchEquals(char, pattern[0]) {
 			return false
 		}
